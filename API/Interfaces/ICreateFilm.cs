@@ -2,13 +2,11 @@ using System;
 
 namespace API.Interfaces;
 
- public interface IFilm
+public interface ICreateFilm
     {
-        int FilmId { get; set; }
         string Title { get; set; }
-        string ImageURL {get; set;}
         string Director { get; set; }
+        string ImageURL {get; set;}
         int Year { get; set; }
-        List<IFilmCopy> FilmCopies { get; set; }
-        
+        int NumberOfCopies { get; set; }
     }
