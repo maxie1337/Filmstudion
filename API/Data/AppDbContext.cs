@@ -1,8 +1,9 @@
 using System;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using API.Models.Film;
 using API.Models.FilmStudio;
+using API.Models.User;
+using API.Models.FilmCopy;
 
 namespace API.data;
 
@@ -16,6 +17,9 @@ public class AppDbContext : DbContext
 
     public DbSet<Film> Films { get; set; }
     public DbSet<FilmStudio> FilmStudios { get; set; }
+    public DbSet<User> Users { get; set; }
+    public DbSet<FilmCopy> FilmCopies { get; set; }
+    
     
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

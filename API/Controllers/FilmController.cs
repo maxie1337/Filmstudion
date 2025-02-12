@@ -11,9 +11,16 @@ namespace API.Controllers
 public class FilmController : ControllerBase
 {
     private readonly AppDbContext _context;
-    public FilmController(AppDbContext context) { _context = context; }
+
+    public FilmController(AppDbContext context)
+    { 
+
+        _context = context; 
+
+    }
 
     [HttpGet]
+    
     public IActionResult GetFilms() => Ok(_context.Films.ToList());
 } 
 
