@@ -1,53 +1,110 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Linq;
+using System.Security.Claims;
 using API.data;
 using API.Models.FilmStudio;
-using System.Text;
-using System.Security.Cryptography;
 
-
-namespace API.Controllers
+namespace MyFilmApi.Controllers
 {
-
-[ApiController]
-[Route("api/filmstudios")]
-public class FilmStudioController : ControllerBase
-{
-    private readonly AppDbContext _context;
-    public FilmStudioController(AppDbContext context) { _context = context; }
-
-    [HttpGet]
-    public IActionResult GetFilmStudios() => Ok(_context.FilmStudios.Select(fs => new { fs.FilmStudioId, fs.Name, fs.City, fs.Email }).ToList());
-
-    [HttpPost("register")]
-    public IActionResult RegisterFilmStudio([FromBody] RegisterFilmStudioDto newStudio)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class FilmStudioController : ControllerBase
     {
-        if (!ModelState.IsValid)
+        private readonly AppDbContext _context;
+        public FilmStudioController(AppDbContext context)
         {
-            return BadRequest(ModelState);
+            _context = context;
         }
 
-        var filmStudio = new FilmStudio
+        // POST: /api/filmstudio/register
+        // Tillåtet för anonyma användare
+        [HttpPost("register")]
+        [AllowAnonymous]
+        public IActionResult Register([FromBody] RegisterFilmStudioDto registerDto)
         {
-            Name = newStudio.Name,
-            City = newStudio.City,
-            Email = newStudio.Email,
-            PasswordHash = HashPassword(newStudio.Password)
-        };
+            if (registerDto == null || string.IsNullOrEmpty(registerDto.Name) ||
+                string.IsNullOrEmpty(registerDto.City) || string.IsNullOrEmpty(registerDto.Password))
+            {
+                return BadRequest("Ogiltigt Namn, lösenord eller stad");
+            }
 
-        _context.FilmStudios.Add(filmStudio);
-        _context.SaveChanges();
+            var newStudio = new FilmStudio
+            {
+                Name = registerDto.Name,
+                City = registerDto.City,
+                Password = registerDto.Password
+            };
 
-        return Ok(new { filmStudio.FilmStudioId, filmStudio.Name, filmStudio.City, filmStudio.Email });
-    }
+            _context.FilmStudios.Add(newStudio);
+            _context.SaveChanges();
 
-    private string HashPassword(string password)
-    {
-        using (var sha256 = SHA256.Create())
+            var result = new {
+                FilmStudioId = newStudio.FilmStudioId,
+                Name = newStudio.Name,
+                City = newStudio.City
+            };
+
+            return Ok(result);
+        }
+
+        // GET: /api/filmstudios
+        // Tillåter både anonyma och autentiserade anrop
+        [HttpGet("/api/filmstudios")]
+        [AllowAnonymous]
+        public IActionResult GetFilmStudios()
         {
-            var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-            return BitConverter.ToString(hashedBytes).Replace("-", "").ToLower();
+            // Om användaren är autentiserad och har admin-roll returneras fullständig data
+            var role = User.FindFirst(ClaimTypes.Role)?.Value?.ToLower();
+            if (User.Identity.IsAuthenticated && role == "admin")
+            {
+                return Ok(_context.FilmStudios.ToList());
+            }
+            else
+            {
+                // I övrigt returneras filtrerad data (utan t.ex. City)
+                var result = _context.FilmStudios
+                    .Select(fs => new 
+                {
+                    fs.FilmStudioId,
+                    fs.Name
+                })
+                .ToList();
+                return Ok(result);
+            }
+        }
+
+        // GET: /api/filmstudio/{id}
+        // Tillåtet för alla, men visar mer data om användaren är admin eller om filmstudion hämtar sin egen info
+        [HttpGet("{id}")]
+        [AllowAnonymous]
+        public IActionResult GetFilmStudioById(int id)
+        {
+            var studio = _context.FilmStudios.FirstOrDefault(s => s.FilmStudioId == id);
+            if (studio == null)
+                return NotFound();
+
+            var role = User.FindFirst(ClaimTypes.Role)?.Value?.ToLower();
+            // Om admin – visa all data
+            if (User.Identity.IsAuthenticated && role == "admin")
+            {
+                return Ok(studio);
+            }
+            // Om filmstudio och tokeninnehållet matchar (här antas att token innehåller filmstudions namn i "sub")
+            if (User.Identity.IsAuthenticated && role == "filmstudio")
+            {
+                var username = User.Identity.Name;
+                if (username == studio.Name)
+                {
+                    return Ok(studio);
+                }
+            }
+            // Annars returneras filtrerad data
+            var filtered = new {
+                studio.FilmStudioId,
+                studio.Name
+            };
+            return Ok(filtered);
         }
     }
-  }
 }
