@@ -41,6 +41,16 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddScoped<JwtService>();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowLocalhost5500", policy =>
+    {
+        policy.WithOrigins("http://127.0.0.1:5500")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 
 var app = builder.Build();
 
@@ -50,6 +60,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
     app.MapScalarApiReference();
 }
+
+app.UseCors("AllowLocalhost5500");
 
 app.UseHttpsRedirection();
 
