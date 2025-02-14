@@ -5,10 +5,10 @@ using System.Security.Claims;
 using API.data;
 using API.Models.FilmStudio;
 
-namespace MyFilmApi.Controllers
+namespace API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("api/filmstudio")]
     public class FilmStudioController : ControllerBase
     {
         private readonly AppDbContext _context;
@@ -50,7 +50,7 @@ namespace MyFilmApi.Controllers
 
         // GET: /api/filmstudios
         // Tillåter både anonyma och autentiserade anrop
-        [HttpGet("/api/filmstudios")]
+        [HttpGet("filmstudios")]
         [AllowAnonymous]
         public IActionResult GetFilmStudios()
         {

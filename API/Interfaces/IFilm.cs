@@ -1,4 +1,5 @@
 using System;
+using API.Models.FilmCopy;
 
 namespace API.Interfaces;
 
@@ -6,9 +7,9 @@ namespace API.Interfaces;
     {
         int FilmId { get; set; }
         string Title { get; set; }
-        string ImageURL {get; set;}
+        string? ImageURL {get; set;}
         string Director { get; set; }
         int Year { get; set; }
-        List<IFilmCopy> FilmCopies { get; set; }
+        List<FilmCopy> FilmCopies { get; set; }
         
     }

@@ -32,8 +32,10 @@ namespace MyFilmApi.Controllers
             var film = new Film
             {
                 Title = filmDto.Title,
+                ImageURL = filmDto.ImageURL,
                 Director = filmDto.Director,
-                Year = filmDto.Year
+                Year = filmDto.Year,
+                FilmCopies = new List<FilmCopy>()
             };
 
             // Skapa filmkopior enligt angivet antal
@@ -57,13 +59,13 @@ namespace MyFilmApi.Controllers
             if (!User.Identity.IsAuthenticated)
             {
                 var result = _context.Films
-                                     .Select(f => new {
-                                         f.FilmId,
-                                         f.Title,
-                                         f.Director,
-                                         f.Year
-                                     })
-                                     .ToList();
+                .Select(f => new {
+                    f.FilmId,
+                    f.Title,
+                    f.Director,
+                    f.Year
+                })
+                .ToList();
                 return Ok(result);
             }
             else
@@ -140,7 +142,7 @@ namespace MyFilmApi.Controllers
             if (studio == null)
                 return StatusCode(409, "Filmstudio ej hittad");
 
-            bool alreadyRented = film.FilmCopies.Any(copy => copy.IsRented && RentedByStudioId == studioid);
+            bool alreadyRented = film.FilmCopies.Any(copy => copy.IsRented && copy.RentedByStudioId == studioid);
             if (alreadyRented)
                 return StatusCode(403, "Filmstudio har redan hyrt en kopia");
 
