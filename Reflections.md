@@ -18,7 +18,7 @@ FilmStudio & IFilmStudio
 
 User & IUser
 
-  Användare (administratörer eller pseudo-användare för filmstudios) representeras av klassen *User*, som implementerar *IUser*. Den innehåller egenskaper som `UserId`, `Username`, `Password` och `Role`, vilket gör det möjligt att hantera autentisering och auktorisering.
+  Användare (administratörer eller pseudo-användare för filmstudios) representeras av klassen User, som implementerar IUser. Den innehåller egenskaper som `UserId`, `Username`, `Password` och `Role`, vilket gör det möjligt att hantera autentisering och auktorisering.
 
 DTO
 
