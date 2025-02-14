@@ -5,7 +5,7 @@ using API.data;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
 
-namespace MyFilmApi.Controllers
+namespace API.Controllers
 {
     [ApiController]
     [Route("api/users")]
@@ -13,15 +13,13 @@ namespace MyFilmApi.Controllers
     {
         private readonly AppDbContext _context;
         private readonly JwtService _jwtService;
-
         public UsersController(AppDbContext context, JwtService jwtService)
         {
             _context = context;
             _jwtService = jwtService;
         }
 
-        // POST: /api/users/register
-        // Endast adminregistrering (ej skyddad med [Authorize] då man registrerar nytt konto)
+        // Post för adminregistrering
         [HttpPost("register")]
         [AllowAnonymous]
         public IActionResult Register([FromBody] UserRegisterDto registerDto)
@@ -43,7 +41,8 @@ namespace MyFilmApi.Controllers
                 _context.SaveChanges();
 
                 var token = _jwtService.GenerateToken(newUser);
-                var result = new {
+                var result = new
+                {
                     newUser.UserId,
                     newUser.Username,
                     newUser.Role,
@@ -55,8 +54,7 @@ namespace MyFilmApi.Controllers
             return BadRequest("Endast adminregistrering sker via denna endpoint");
         }
 
-        // POST: /api/users/authenticate
-        // Tillåtet för anonyma – returnerar JWT vid lyckad autentisering
+        // Autentiserar användare (admin eller filmstudio) och returnerar JWT om autentiseringen är lyckad
         [HttpPost("authenticate")]
         [AllowAnonymous]
         public IActionResult Authenticate([FromBody] UserAuthenticateDto authDto)
@@ -65,26 +63,24 @@ namespace MyFilmApi.Controllers
                 string.IsNullOrEmpty(authDto.Password))
                 return BadRequest("Ogiltig data");
 
-            // Försök att hitta en admin-användare
             var user = _context.Users.FirstOrDefault(u =>
                 u.Username == authDto.Username && u.Password == authDto.Password);
             if (user != null)
             {
                 var token = _jwtService.GenerateToken(user);
-                return Ok(new {
+                return Ok(new
+                {
                     user.UserId,
                     user.Username,
                     user.Role,
                     Token = token
                 });
             }
-
-            // Försök att hitta en filmstudio (här antas att filmstudions Name används som användarnamn)
+            
             var studio = _context.FilmStudios.FirstOrDefault(fs =>
                 fs.Name == authDto.Username && fs.Password == authDto.Password);
             if (studio != null)
             {
-                // Skapa ett pseudo‑användarobjekt för filmstudion med nödvändiga claims
                 var pseudoUser = new User
                 {
                     UserId = studio.FilmStudioId,
@@ -93,12 +89,14 @@ namespace MyFilmApi.Controllers
                 };
 
                 var token = _jwtService.GenerateToken(pseudoUser);
-                return Ok(new {
+                return Ok(new
+                {
                     UserId = studio.FilmStudioId,
                     Username = studio.Name,
                     Role = "filmstudio",
                     FilmStudioId = studio.FilmStudioId,
-                    FilmStudio = new {
+                    FilmStudio = new
+                    {
                         studio.FilmStudioId,
                         studio.Name,
                         studio.City
