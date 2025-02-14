@@ -10,7 +10,5 @@ public class FilmStudio : IFilmStudio
     public string Name { get; set; }
     public string City { get; set; }
     public List<ConcreteFilmCopy> RentedFilmCopies { get; set; } = new List<ConcreteFilmCopy>();
-
-    //KOM IHÅG, VIKTIGT! Lösenordet ska inte exponeras via API:t
     public string Password { get; set; }
 }

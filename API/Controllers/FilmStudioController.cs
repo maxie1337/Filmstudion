@@ -12,13 +12,13 @@ namespace API.Controllers
     public class FilmStudioController : ControllerBase
     {
         private readonly AppDbContext _context;
+
         public FilmStudioController(AppDbContext context)
         {
             _context = context;
         }
 
-        // POST: /api/filmstudio/register
-        // Tillåtet för anonyma användare
+        // Registrerar en ny filmstudio
         [HttpPost("register")]
         [AllowAnonymous]
         public IActionResult Register([FromBody] RegisterFilmStudioDto registerDto)
@@ -39,7 +39,8 @@ namespace API.Controllers
             _context.FilmStudios.Add(newStudio);
             _context.SaveChanges();
 
-            var result = new {
+            var result = new
+            {
                 FilmStudioId = newStudio.FilmStudioId,
                 Name = newStudio.Name,
                 City = newStudio.City
@@ -48,13 +49,12 @@ namespace API.Controllers
             return Ok(result);
         }
 
-        // GET: /api/filmstudios
-        // Tillåter både anonyma och autentiserade anrop
+        // Hämtar lista över filmstudios (admin ser all information, andra ser filtrerad info)
         [HttpGet("filmstudios")]
         [AllowAnonymous]
         public IActionResult GetFilmStudios()
         {
-            // Om användaren är autentiserad och har admin-roll returneras fullständig data
+            // Om användaren är admin all info
             var role = User.FindFirst(ClaimTypes.Role)?.Value?.ToLower();
             if (User.Identity.IsAuthenticated && role == "admin")
             {
@@ -62,20 +62,19 @@ namespace API.Controllers
             }
             else
             {
-                // I övrigt returneras filtrerad data (utan t.ex. City)
+                // Annars returneras filtrerad info
                 var result = _context.FilmStudios
-                    .Select(fs => new 
-                {
-                    fs.FilmStudioId,
-                    fs.Name
-                })
-                .ToList();
+                    .Select(fs => new
+                    {
+                        fs.FilmStudioId,
+                        fs.Name
+                    })
+                    .ToList();
                 return Ok(result);
             }
         }
 
-        // GET: /api/filmstudio/{id}
-        // Tillåtet för alla, men visar mer data om användaren är admin eller om filmstudion hämtar sin egen info
+        // Hämtar en specifik filmstudio, admin och den filmstudion man hämtar ser all info
         [HttpGet("{id}")]
         [AllowAnonymous]
         public IActionResult GetFilmStudioById(int id)
@@ -85,12 +84,12 @@ namespace API.Controllers
                 return NotFound();
 
             var role = User.FindFirst(ClaimTypes.Role)?.Value?.ToLower();
-            // Om admin – visa all data
+            // Om admin hämtar info, visa allt
             if (User.Identity.IsAuthenticated && role == "admin")
             {
                 return Ok(studio);
             }
-            // Om filmstudio och tokeninnehållet matchar (här antas att token innehåller filmstudions namn i "sub")
+            // Om filmstudion hämtar sin egen info, visa allt
             if (User.Identity.IsAuthenticated && role == "filmstudio")
             {
                 var username = User.Identity.Name;
@@ -99,8 +98,9 @@ namespace API.Controllers
                     return Ok(studio);
                 }
             }
-            // Annars returneras filtrerad data
-            var filtered = new {
+            // Annars skicka tillbaka denna info
+            var filtered = new
+            {
                 studio.FilmStudioId,
                 studio.Name
             };
