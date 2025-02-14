@@ -16,14 +16,12 @@ namespace API.Controllers
     {
         private readonly AppDbContext _context;
 
-        // Konstruktor: injicerar AppDbContext
         public FilmsController(AppDbContext context)
         {
             _context = context;
         }
 
-        // POST: /api/films
-        // Lägger till en ny film (endast admin)
+        // Lägger till en ny film
         [Authorize(Roles = "admin")]
         [HttpPost]
         public IActionResult AddFilm([FromBody] CreateFilmDto filmDto)
@@ -40,7 +38,7 @@ namespace API.Controllers
                 FilmCopies = new List<FilmCopy>()
             };
 
-            // Skapar filmkopior enligt angivet antal
+            // Skapar filmkopior 
             for (int i = 0; i < filmDto.NumberOfCopies; i++)
             {
                 film.FilmCopies.Add(new FilmCopy { IsRented = false });
@@ -52,8 +50,7 @@ namespace API.Controllers
             return Ok(film);
         }
 
-        // GET: /api/films
-        // Hämtar en lista med filmer (olika data beroende på om användaren är inloggad)
+        // Hämtar en lista med filmer
         [AllowAnonymous]
         [HttpGet]
         public IActionResult GetFilms()
@@ -87,7 +84,6 @@ namespace API.Controllers
             }
         }
 
-        // GET: /api/films/{id}
         // Hämtar detaljer om en specifik film
         [AllowAnonymous]
         [HttpGet("{id}")]
@@ -113,8 +109,7 @@ namespace API.Controllers
             }
         }
 
-        // PATCH/PUT/POST: /api/films/{id}
-        // Uppdaterar en films information (endast admin)
+        // Uppdaterar en films information
         [Authorize(Roles = "admin")]
         [HttpPatch("{id}")]
         [HttpPut("{id}")]
@@ -131,19 +126,18 @@ namespace API.Controllers
             film.Title = updatedFilm.Title;
             film.Director = updatedFilm.Director;
             film.Year = updatedFilm.Year;
-            // Ytterligare logik för att uppdatera filmkopior kan läggas till vid behov
+
 
             _context.SaveChanges();
             return Ok(film);
         }
 
-        // POST: /api/films/rent?id={id}&studioid={studioid}
-        // Hyra en film (endast filmstudio)
+        // Filmuthyrning endpoint
         [Authorize(Roles = "filmstudio")]
         [HttpPost("rent")]
         public IActionResult RentFilm([FromQuery] int id, [FromQuery] int studioid)
         {
-            // Kontrollera filmstudiots ID från token
+
             var userIdClaim = User.FindFirst("UserId")?.Value;
             if (userIdClaim == null || !int.TryParse(userIdClaim, out int tokenStudioId) || tokenStudioId != studioid)
                 return Unauthorized("Otillåtet");
@@ -174,13 +168,11 @@ namespace API.Controllers
             return Ok(new { message = "Movie rented successfully" });
         }
 
-        // POST: /api/films/return?id={id}&studioid={studioid}
-        // Returnerar en hyrd film (endast filmstudio)
+        // Lämnar tillbaka en hyrd film 
         [Authorize(Roles = "filmstudio")]
         [HttpPost("return")]
         public IActionResult ReturnFilm([FromQuery] int id, [FromQuery] int studioid)
         {
-            // Kontrollera filmstudiots ID från token
             var userIdClaim = User.FindFirst("UserId")?.Value;
             if (userIdClaim == null || !int.TryParse(userIdClaim, out int tokenStudioId) || tokenStudioId != studioid)
                 return Unauthorized("Otillåtet");
